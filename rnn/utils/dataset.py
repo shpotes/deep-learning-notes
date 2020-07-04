@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -6,7 +6,7 @@ import torch
 class TemporalOrder(torch.utils.data.IterableDataset):
     def __init__(self,
                  difficulty_level: str = 'hard',
-                 transforms: Callable = None,
+                 encode: bool = True,
                  seed: int = 42):
         
         super(TemporalOrder).__init__()
@@ -32,12 +32,16 @@ class TemporalOrder(torch.utils.data.IterableDataset):
 
         self.set_difficulty(difficulty_level)
 
-        if transform is None:
-            self.transforms = lambda x: x
-        else:
-            self.transforms = lambda x, y: transforms(x, y)
+        self.encode = encode
 
+    def encode_data(self, text: np.array, y: str) \
+        -> Tuple[np.ndarray, y: np.array]:
+        pass
 
+    def decode_data(self, x: np.ndarray, y: np.array)\
+        -> Tuple[str, str]:
+        pass
+    
     def set_difficulty(self, difficulty_level: str):
         if difficulty_level == 'easy':
             self.sim_params = {
@@ -93,6 +97,9 @@ class TemporalOrder(torch.utils.data.IterableDataset):
             else:
                 x[t1], x[t2] = self.relevant_symbols[1], self.relevant_symbols[1]
 
-            x = ''.join(x)
+            if self.encode:
+                x, y = self.encode_data(x, y)
+            else:
+                x = ''.join(x)
 
-            yield self.transforms(x, y)
+            yield x, y
